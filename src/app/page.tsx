@@ -11,6 +11,7 @@ import UpdateResolverButton from "./components/update-resolver-button";
 import SetRegistryButton from "./components/set-registry-button";
 import DeployRegistrarButton from "./components/deploy-registrar-button";
 import ConnectRegistrarButton from "./components/connect-registrar-button";
+import MintSubdomainForm from "./components/mint-subdomain-form";
 import { Domain } from "../lib/types";
 import { Copy, Check, ExternalLink, ScrollText, Sparkles } from "lucide-react";
 
@@ -65,6 +66,7 @@ export default function Home() {
   const [selectedDomain, setSelectedDomain] = useState<Domain | undefined>();
   const [registryAddress, setRegistryAddress] = useState("");
   const [registrarAddress, setRegistrarAddress] = useState("");
+  const [isRegistrarConnected, setIsRegistrarConnected] = useState(false);
   const [copied, setCopied] = useState(false);
   const [txHistory, setTxHistory] = useState<Transactionn[]>([]);
   const [recordInput, setRecordInput] = useState("");
@@ -72,11 +74,18 @@ export default function Home() {
   const handleDeploySuccess = useCallback((registryAddress: Address) => {
     console.log("New registry deployed at:", registryAddress);
     setRegistryAddress(registryAddress);
+    setRegistrarAddress("");
+    setIsRegistrarConnected(false);
     setRecordInput(registryAddress);
   }, []);
 
   const handleRegistrarDeploySuccess = useCallback((address: Address) => {
     setRegistrarAddress(address);
+    setIsRegistrarConnected(false);
+  }, []);
+
+  const handleRegistrarConnectSuccess = useCallback(() => {
+    setIsRegistrarConnected(true);
   }, []);
 
   //function to add a transction to the history if it is not already there
@@ -655,6 +664,7 @@ export default function Home() {
                         registrarAddress={registrarAddress}
                         selectedChain={getFullChainName(chainName, isTestnet)}
                         addTransaction={addTransaction}
+                        onConnectSuccess={handleRegistrarConnectSuccess}
                       />
                     </div>
                   </div>
@@ -672,7 +682,8 @@ export default function Home() {
                 <span className="font-bold">Mint</span>
               </div>
               <div className="text-sm text-stone-700">
-                Congrats on the launch! Create a subdomain via Etherscan.
+                Choose a label and recipient, then mint the first subdomain
+                through the registrar you deployed and connected above.
               </div>
             </div>
             {/* Configure Registrar Box*/}
@@ -682,19 +693,21 @@ export default function Home() {
                   <div className="flex flex-col gap-1">
                     <div className="flex items-end justify-between">
                       <div className="font-light">
-                        Mint a subdomain via Etherscan
+                        Mint a subdomain
                       </div>
                     </div>
                     <div className="text-sm mt-2 text-stone-500">
-                      Search for your registrar address on the appropriate L2
-                      Etherscan. <br />
-                      <br />
-                      Under Contract select register() and write.
-                      <Image
-                        src="/etherscan-screenshot.webp"
-                        alt="etherscan"
-                        width={400}
-                        height={400}
+                      The connected wallet submits the mint transaction on the
+                      selected L2. The recipient becomes the owner of the new
+                      subdomain NFT.
+                    </div>
+                    <div className="mt-3">
+                      <MintSubdomainForm
+                        registrarAddress={registrarAddress}
+                        selectedChain={getFullChainName(chainName, isTestnet)}
+                        baseName={selectedDomain?.name}
+                        isRegistrarConnected={isRegistrarConnected}
+                        addTransaction={addTransaction}
                       />
                     </div>
                   </div>

@@ -19,6 +19,7 @@ type Props = {
   registrarAddress: string;
   selectedChain: string;
   addTransaction: (action: string, chain: string, hash: string) => void;
+  onConnectSuccess?: () => void;
 };
 
 export default function ConnectRegistrarButton({
@@ -26,6 +27,7 @@ export default function ConnectRegistrarButton({
   registrarAddress,
   selectedChain,
   addTransaction,
+  onConnectSuccess,
 }: Props) {
   const [pendingSwitch, setPendingSwitch] = useState(false);
   const { chain, isConnected } = useAccount();
@@ -78,8 +80,15 @@ export default function ConnectRegistrarButton({
   useEffect(() => {
     if (!isSuccess || !hash) return;
     addTransaction("Connected Registrar", selectedChain, hash);
+    onConnectSuccess?.();
     toast.success("Registrar connected to registry");
-  }, [isSuccess, hash, addTransaction, selectedChain]);
+  }, [
+    isSuccess,
+    hash,
+    addTransaction,
+    selectedChain,
+    onConnectSuccess,
+  ]);
 
   const handleConnect = () => {
     if (!isAddress(registryAddress) || !isAddress(registrarAddress)) {
