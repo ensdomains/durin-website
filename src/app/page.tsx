@@ -3,12 +3,14 @@ import Image from "next/image";
 import { Gelasio } from "next/font/google";
 import Link from "next/link";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAccount } from "wagmi";
 import DeployButton from "./components/deploy-button";
 import { type Address } from "viem";
 import UpdateResolverButton from "./components/update-resolver-button";
 import SetRegistryButton from "./components/set-registry-button";
+import DeployRegistrarButton from "./components/deploy-registrar-button";
+import ConnectRegistrarButton from "./components/connect-registrar-button";
 import { Domain } from "../lib/types";
 import { Copy, Check, ExternalLink, ScrollText, Sparkles } from "lucide-react";
 
@@ -62,30 +64,31 @@ export default function Home() {
 
   const [selectedDomain, setSelectedDomain] = useState<Domain | undefined>();
   const [registryAddress, setRegistryAddress] = useState("");
+  const [registrarAddress, setRegistrarAddress] = useState("");
   const [copied, setCopied] = useState(false);
   const [txHistory, setTxHistory] = useState<Transactionn[]>([]);
   const [recordInput, setRecordInput] = useState("");
 
-  const handleDeploySuccess = (registryAddress: Address) => {
+  const handleDeploySuccess = useCallback((registryAddress: Address) => {
     console.log("New registry deployed at:", registryAddress);
     setRegistryAddress(registryAddress);
     setRecordInput(registryAddress);
-  };
+  }, []);
+
+  const handleRegistrarDeploySuccess = useCallback((address: Address) => {
+    setRegistrarAddress(address);
+  }, []);
 
   //function to add a transction to the history if it is not already there
-  const addTransaction = (action: string, chain: string, hash: string) => {
-    if (!txHistory.some((tx) => tx.hash === hash)) {
-      console.log("Adding transaction to history:", action, chain, hash);
-      setTxHistory((prev) => [
-        ...prev,
-        {
-          action,
-          chain,
-          hash,
-        },
-      ]);
-    }
-  };
+  const addTransaction = useCallback(
+    (action: string, chain: string, hash: string) => {
+      setTxHistory((prev) => {
+        if (prev.some((tx) => tx.hash === hash)) return prev;
+        return [...prev, { action, chain, hash }];
+      });
+    },
+    []
+  );
 
   return (
     <div className="flex flex-col h-screen font-sans text-stone-900 relative">
@@ -515,9 +518,9 @@ export default function Home() {
               </div> */}
             </div>
           </div>
-          {/* Customize Registrar */}
+          {/* Deploy Registrar */}
           <h2 className={`${gelasio.className} mb-3 mt-12 text-xl`}>
-            3. Customize Registrar
+            3. Deploy Default Registrar
           </h2>
           <div className="flex flex-col md:flex-row gap-20">
             <div className="bg-stone-150 z-10 w-full md:w-96 flex-shrink-0 flex flex-col gap-3 p-6 rounded-lg h-fit">
@@ -528,9 +531,9 @@ export default function Home() {
               <div className="text-sm text-stone-700">
                 The registrar controls how names are minted. Users can only
                 register a subdomain through the registrar by calling
-                register(). The registrar is where minting logic—such as pricing
-                models, renewal mechanisms, and expiration dates—should be
-                implemented. We provide an example on GitHub.
+                register(). This default implementation lets anyone register an
+                available label of at least three characters and assigns the
+                resulting subname NFT to the address they choose.
               </div>
             </div>
             {/* Customize Registrar Box*/}
@@ -540,55 +543,39 @@ export default function Home() {
                   <div className="flex flex-col gap-1">
                     <div className="flex items-end justify-between">
                       <div className="font-light">
-                        Customize and Deploy L2 Registrar
+                        Deploy the ready-to-use L2 Registrar
                       </div>
                     </div>
                     <div className="text-sm mt-2 text-stone-500">
-                      Select a template{" "}
-                      <Link
-                        href="https://github.com/namestonehq/durin/blob/main/src/examples/L2Registrar.sol"
-                        target="_blank"
-                        className="underline underline-offset-4"
-                      >
-                        L2 registrar
-                      </Link>{" "}
-                      and modify it as needed. You will need your registry
-                      address.
+                      Deploy Durin&apos;s default registrar directly with your
+                      wallet. Its constructor is automatically linked to the L2
+                      registry you created above.
                     </div>
 
                     <div className="my-4">
-                      <button
-                        onClick={() => {
-                          window.open(
-                            "https://github.com/namestonehq/durin?tab=readme-ov-file#3-customize-the-registrar-template",
-                            "_blank"
-                          );
-                        }}
-                        className="flex items-center gap-2 h-9 px-2 text-sm border rounded-lg shadow text- text-stone-900 hover:bg-stone-100"
-                      >
-                        <Image
-                          alt="github"
-                          src="/github.svg"
-                          width={16}
-                          height={16}
-                        ></Image>
-                        Customize
-                      </button>
+                      <DeployRegistrarButton
+                        registryAddress={registryAddress}
+                        selectedChain={getFullChainName(chainName, isTestnet)}
+                        onDeploySuccess={handleRegistrarDeploySuccess}
+                        addTransaction={addTransaction}
+                      />
                     </div>
                   </div>
                 </div>
               </div>
               <div className="bg-stone-150 flex text-stone-700 rounded-lg h-16 text-sm z-0 -mt-2 relative">
                 <div className="flex pt-7 whitespace-nowrap pl-6 pr-2">
-                  Registry Address:
+                  Registrar Address:
                 </div>
                 <div className="flex-1 items-center mr-2 h-10 px-4 mt-4 py-1 overflow-hidden border-stone-200 border focus:border-transparent rounded-lg appearance-none focus:ring-2 focus:ring-stone-500 focus:outline-none bg-white text-stone-400 flex ">
-                  {registryAddress ? registryAddress : "Waiting for Deploy..."}
-                  {registryAddress && (
+                  {registrarAddress
+                    ? registrarAddress
+                    : "Waiting for registrar deployment..."}
+                  {registrarAddress && (
                     <button
                       onClick={() => {
                         navigator.clipboard
-                          .writeText(registryAddress)
+                          .writeText(registrarAddress)
                           .then(() => {
                             setCopied(true);
                             setTimeout(() => setCopied(false), 2000);
@@ -603,7 +590,7 @@ export default function Home() {
                       )}
                     </button>
                   )}
-                  {registryAddress && (
+                  {registrarAddress && (
                     <Image
                       src={"etherscan-logo.svg"}
                       alt="etherscan"
@@ -619,7 +606,7 @@ export default function Home() {
                             ) as keyof typeof chainScanMap
                           ] +
                             "address/" +
-                            registryAddress,
+                            registrarAddress,
                           "_blank"
                         );
                       }}
@@ -658,8 +645,17 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="text-sm mt-2 text-stone-500">
-                      As the final step, call <code>addRegistrar()</code> on
-                      your registry with the address of your deployed registrar.{" "}
+                      Approve the deployed registrar to create subnames through
+                      your registry. This calls <code>addRegistrar()</code> from
+                      your connected wallet.
+                    </div>
+                    <div className="mt-3">
+                      <ConnectRegistrarButton
+                        registryAddress={registryAddress}
+                        registrarAddress={registrarAddress}
+                        selectedChain={getFullChainName(chainName, isTestnet)}
+                        addTransaction={addTransaction}
+                      />
                     </div>
                   </div>
                 </div>
