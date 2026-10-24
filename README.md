@@ -17,34 +17,56 @@ This repository contains the frontend application for Durin, allowing users to d
 - **Smart Contracts**: The Durin protocol contracts are available at [github.com/ensdomains/durin](https://github.com/ensdomains/durin)
 - **Live website**: [durin.dev](https://durin.dev), hosted on Cloudflare Workers as static assets
 
-## Development
+## Toolchain
 
-Use the Node version in `.node-version` for Node-based tooling. Install [Bun](https://bun.sh), copy `example.env` to `.env.local`, and fill in the required values.
+Use **Node 24.22.1** (selected by `.node-version`) to execute Vite, TypeScript and Wrangler. Use **Bun 1.4.4** (pinned by `packageManager` in `package.json`) only to install dependencies from `bun.lock`. Bun is retained because `bunfig.toml` enforces a two-day minimum dependency age; using a different installer would skip that policy.
+
+The package scripts invoke each tool explicitly through Node. Run them with Node's built-in script runner, `node --run`; Bun is not the application or tooling runtime. The deployed site consists of browser assets served by Cloudflare Workers Static Assets.
+
+Select the pinned tools with your version manager and verify them before installing:
 
 ```bash
+node --version # v24.22.1
+bun --version  # 1.4.4
 bun install --frozen-lockfile
-bun run dev
+```
+
+Do not generate a second package-manager lockfile. Package metadata records the required versions; it does not install or switch your local or Cloudflare build runtime.
+
+## Development
+
+Copy `example.env` to `.env.local` and fill in the required frontend values. `VITE_*` values are bundled into public browser code: use frontend-safe keys with provider domain restrictions, never backend secrets.
+
+```bash
+node --run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-Create a production build with:
+Type-check or build the production assets:
 
 ```bash
-bun run build
+node --run typecheck
+node --run build
 ```
 
-Preview the production build locally with Wrangler:
+Preview the production build locally through Wrangler, with remote bindings disabled:
 
 ```bash
-bun run preview
+node --run preview
 ```
 
-Deploy the static assets to Cloudflare Workers with:
+## Cloudflare publishing
+
+`wrangler.jsonc` serves `dist` as static assets with SPA fallback. Configure the Cloudflare build environment to use Node 24.22.1 and Bun 1.4.4, install with `bun install --frozen-lockfile`, then build with `node --run build`. Verify the configured production branch and tool versions in Workers Builds before publishing; this repository does not change account settings.
+
+Maintainers can build and publish with:
 
 ```bash
-bun run deploy
+node --run deploy
 ```
+
+This command runs `wrangler deploy` and changes the deployed Worker. It is separate from local validation. There is no GitHub Actions workflow in this branch; the former build workflow and its intermediate validation replacement were removed.
 
 ## Technology Stack
 
