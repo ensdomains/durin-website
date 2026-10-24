@@ -13,15 +13,16 @@ This repository contains the frontend application for Durin, allowing users to d
 
 ## Related Resources
 
+- **Website source**: [ensdomains/durin-website](https://github.com/ensdomains/durin-website)
 - **Smart Contracts**: The Durin protocol contracts are available at [github.com/ensdomains/durin](https://github.com/ensdomains/durin)
 - **Live website**: [durin.dev](https://durin.dev), hosted on Cloudflare Workers as static assets
 
 ## Development
 
-Install [Bun](https://bun.sh), copy `example.env` to `.env.local`, and fill in the required values.
+Use the Node version in `.node-version` for Node-based tooling. Install [Bun](https://bun.sh), copy `example.env` to `.env.local`, and fill in the required values.
 
 ```bash
-bun install
+bun install --frozen-lockfile
 bun run dev
 ```
 
