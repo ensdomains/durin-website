@@ -11,8 +11,11 @@ jobs:
     name: Website
     runs-on: ubuntu-latest
     env:
-      NEXT_PUBLIC_ALCHEMY_API_KEY: xxxxxxxx
-      NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: xxxxxxxx
+      VITE_WALLET_CONNECT_PROJECT_ID: xxxxxxxx
+      VITE_DRPC_API_KEY_FRONTEND: xxxxxxxx
+      VITE_SUBGRAPH_URL: https://example.com
+      VITE_SEPOLIA_SUBGRAPH_URL: https://example.com
+      VITE_FACTORY_ADDRESS: "0xDddddDdDDD8Aa1f237b4fa0669cb46892346d22d"
 
     steps:
       - name: Checkout code
@@ -23,8 +26,13 @@ jobs:
         with:
           node-version-file: '.node-version'
 
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: 'package.json'
+
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build
-        run: npm run build
+        run: bun run build
