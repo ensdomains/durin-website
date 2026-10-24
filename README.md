@@ -40,7 +40,7 @@ bun run preview
 
 `wrangler.jsonc` serves `dist` as static assets with SPA fallback. Workers Builds should use the pinned Node/Bun versions, `bun install --frozen-lockfile` and `bun run build`. Verify its production branch and tool versions before publishing; package metadata alone does not verify account settings.
 
-Maintainers can publish with `bun run deploy`; it builds and runs `wrangler deploy`. Local preview uses Wrangler with remote bindings disabled. There is no GitHub Actions workflow in this branch.
+Maintainers can publish with `bun run deploy`; it builds and runs `wrangler deploy`. Local preview uses Wrangler with remote bindings disabled. The `Build` GitHub Actions workflow installs the pinned Node/Bun versions and runs the frozen install and website build on pull requests and pushes to `main`.
 
 ## Technology Stack
 
